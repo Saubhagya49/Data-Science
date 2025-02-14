@@ -1,61 +1,50 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
 import pickle
+import numpy as np
 
 # Load the trained model
-with open("model.pkl", "rb") as file:
-    model = pickle.load(file)
+with open("best_spacex_model.pkl", "rb") as f:
+    model = pickle.load(f)
 
-# Load feature names used during training
-with open("feature_names.pkl", "rb") as f:
-    feature_names = pickle.load(f)
+# Title
+st.title("🚀 SpaceX Landing Prediction")
+st.write("Enter details about the rocket launch to predict if it will successfully land.")
 
-# Load scaler used in training
-with open("scaler.pkl", "rb") as f:
-    scaler = pickle.load(f)
-
-# Streamlit App UI
-st.title("🚀 SpaceX Falcon 9 Landing Prediction")
-st.write("Predict whether a Falcon 9 booster will land successfully.")
-
-# User Inputs
-flight_number = st.number_input("Flight Number", min_value=1, step=1)
+# Input Fields
 payload_mass = st.number_input("Payload Mass (kg)", min_value=0, step=100)
-orbit = st.selectbox("Orbit Type", ['LEO', 'ISS', 'PO', 'GTO', 'ES-L1', 'SSO', 'HEO', 'MEO', 'VLEO', 'SO', 'GEO'])
-launch_site = st.selectbox("Launch Site", ['CCAFS SLC 40', 'VAFB SLC 4E', 'KSC LC 39A'])
 
-# Create DataFrame for User Input
-columns = ["Flight Number", "Payload Mass (kg)", "Orbit", "Launch Site"]
-input_data = pd.DataFrame([[flight_number, payload_mass, orbit, launch_site]], columns=columns)
+# Orbit Selection
+orbit = st.selectbox("Orbit Type", 
+                      ['LEO', 'ISS', 'PO', 'GTO', 'ES-L1', 'SSO', 'HEO', 'MEO', 'VLEO', 'SO', 'GEO'])
 
-# Apply One-Hot Encoding
-input_data = pd.get_dummies(input_data)
+# Launch Site Selection
+launch_site = st.selectbox("Launch Site", 
+                           ['CCAFS SLC 40', 'VAFB SLC 4E', 'KSC LC 39A'])
 
-# 🚀 Ensure input has the same features as training data
-for col in feature_names:
-    if col not in input_data.columns:
-        input_data[col] = 0  # Add missing columns with default value
+# Encode Orbit Type
+orbit_mapping = {
+    'LEO': 0, 'ISS': 1, 'PO': 2, 'GTO': 3, 'ES-L1': 4, 
+    'SSO': 5, 'HEO': 6, 'MEO': 7, 'VLEO': 8, 'SO': 9, 'GEO': 10
+}
+orbit_encoded = orbit_mapping[orbit]
 
-# Reorder columns to match training data
-input_data = input_data[feature_names]
+# Encode Launch Site
+launch_site_mapping = {
+    'CCAFS SLC 40': 0, 
+    'VAFB SLC 4E': 1, 
+    'KSC LC 39A': 2
+}
+launch_site_encoded = launch_site_mapping[launch_site]
 
-# Convert to NumPy Array
-input_array = input_data.to_numpy().reshape(1, -1)
+# Prepare Input Data for Prediction
+input_data = np.array([[payload_mass, orbit_encoded, launch_site_encoded]])
 
-# 🚀 Ensure feature consistency before applying scaler
-if input_array.shape[1] != len(feature_names):
-    st.error(f"Feature mismatch! Expected {len(feature_names)} features, but got {input_array.shape[1]}.")
-else:
-    try:
-        # Apply scaling using pre-trained scaler
-        input_scaled = scaler.transform(input_array)
-
-        # Predict Button
-        if st.button("Predict Landing Success"):
-            prediction = model.predict(input_scaled)
-            result = "Successful Landing 🏆" if prediction[0] == 1 else "Landing Failure ❌"
-            st.success(f"Predicted Outcome: {result}")
-
-    except Exception as e:
-        st.error(f"Error: {e}")
+# Make Prediction on Button Click
+if st.button("Predict"):
+    prediction = model.predict(input_data)
+    
+    # Display the result
+    if prediction[0] == 1:
+        st.success("🟢 The rocket is likely to **land successfully!**")
+    else:
+        st.error("🔴 The rocket is likely to **fail the landing.**")
