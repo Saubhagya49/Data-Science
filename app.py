@@ -22,8 +22,7 @@ st.write("Predict whether a Falcon 9 booster will land successfully.")
 # User Inputs
 flight_number = st.number_input("Flight Number", min_value=1, step=1)
 payload_mass = st.number_input("Payload Mass (kg)", min_value=0, step=100)
-orbit = st.selectbox("Orbit Type", ['LEO', 'ISS', 'PO', 'GTO', 'ES-L1', 'SSO', 'HEO', 'MEO', 'VLEO',
-       'SO', 'GEO'])
+orbit = st.selectbox("Orbit Type", ['LEO', 'ISS', 'PO', 'GTO', 'ES-L1', 'SSO', 'HEO', 'MEO', 'VLEO', 'SO', 'GEO'])
 launch_site = st.selectbox("Launch Site", ['CCAFS SLC 40', 'VAFB SLC 4E', 'KSC LC 39A'])
 
 # Create DataFrame for User Input
@@ -33,7 +32,7 @@ input_data = pd.DataFrame([[flight_number, payload_mass, orbit, launch_site]], c
 # Apply One-Hot Encoding
 input_data = pd.get_dummies(input_data)
 
-# Ensure input has same features as training data
+# 🚀 Ensure input has the same features as training data
 for col in feature_names:
     if col not in input_data.columns:
         input_data[col] = 0  # Add missing columns with default value
@@ -44,12 +43,12 @@ input_data = input_data[feature_names]
 # Convert to NumPy Array
 input_array = input_data.to_numpy().reshape(1, -1)
 
-# 🚀 Fix: Check feature consistency before applying scaler
+# 🚀 Ensure feature consistency before applying scaler
 if input_array.shape[1] != len(feature_names):
     st.error(f"Feature mismatch! Expected {len(feature_names)} features, but got {input_array.shape[1]}.")
 else:
     try:
-        # Apply scaling
+        # Apply scaling using pre-trained scaler
         input_scaled = scaler.transform(input_array)
 
         # Predict Button
