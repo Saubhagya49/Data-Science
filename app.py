@@ -43,22 +43,19 @@ input_data = input_data[feature_names]
 # Convert to NumPy Array
 input_array = input_data.to_numpy().reshape(1, -1)
 
-# 🚀 Fix: Check before applying scaler
+# 🚀 Fix: Check feature consistency before applying scaler
 if input_array.shape[1] != len(feature_names):
     st.error(f"Feature mismatch! Expected {len(feature_names)} features, but got {input_array.shape[1]}.")
 else:
-    # Apply scaling
-    input_scaled = scaler.transform(input_array)
+    try:
+        # Apply scaling
+        input_scaled = scaler.transform(input_array)
 
-    # Predict Button
-    if st.button("Predict Landing Success"):
-        try:
-            # Make prediction
+        # Predict Button
+        if st.button("Predict Landing Success"):
             prediction = model.predict(input_scaled)
-
-            # Display result
             result = "Successful Landing 🏆" if prediction[0] == 1 else "Landing Failure ❌"
             st.success(f"Predicted Outcome: {result}")
 
-        except Exception as e:
-            st.error(f"Error: {e}")
+    except Exception as e:
+        st.error(f"Error: {e}")
