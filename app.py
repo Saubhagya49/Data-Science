@@ -11,6 +11,10 @@ with open("model.pkl", "rb") as file:
 with open("feature_names.pkl", "rb") as f:
     feature_names = pickle.load(f)
 
+# Load standard scaler (used during training)
+with open("scaler.pkl", "rb") as f:
+    scaler = pickle.load(f)
+
 # Streamlit App UI
 st.title("🚀 SpaceX Falcon 9 Landing Prediction")
 st.write("Predict whether a Falcon 9 booster will land successfully.")
@@ -28,7 +32,7 @@ input_data = pd.DataFrame([[flight_number, payload_mass, orbit, launch_site]],
 # Apply One-Hot Encoding
 input_data = pd.get_dummies(input_data)
 
-# Ensure input has same features as training data
+# Ensure input has the same features as training data
 for col in feature_names:
     if col not in input_data.columns:
         input_data[col] = 0  # Add missing columns with default value
@@ -37,7 +41,10 @@ for col in feature_names:
 input_data = input_data[feature_names]
 
 # Convert to NumPy Array
-input_array = input_data.to_numpy().reshape(1, -1)
+input_array = input_data.to_numpy()
+
+# Apply Standard Scaling (same as training)
+input_array = scaler.transform(input_array)
 
 # Debugging: Show input shape
 st.write(f"Input Shape: {input_array.shape}")
