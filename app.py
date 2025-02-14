@@ -2,6 +2,20 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import pickle
+import os
+
+# Verify file existence before loading
+if not os.path.exists("model.pkl"):
+    st.error("Error: model.pkl not found! Please upload the trained model.")
+    st.stop()
+
+if not os.path.exists("feature_names.pkl"):
+    st.error("Error: feature_names.pkl not found! Please ensure this file exists.")
+    st.stop()
+
+if not os.path.exists("scaler.pkl"):
+    st.error("Error: scaler.pkl not found! Please ensure this file exists.")
+    st.stop()
 
 # Load the trained model
 with open("model.pkl", "rb") as file:
@@ -33,9 +47,10 @@ input_data = pd.DataFrame([[flight_number, payload_mass, orbit, launch_site]],
 input_data = pd.get_dummies(input_data)
 
 # Ensure input has same features as training data
-for col in feature_names:
-    if col not in input_data.columns:
-        input_data[col] = 0  # Add missing columns with default value
+missing_features = set(feature_names) - set(input_data.columns)
+
+for col in missing_features:
+    input_data[col] = 0  # Add missing columns with default value
 
 # Reorder columns to match training data
 input_data = input_data[feature_names]
