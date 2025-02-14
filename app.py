@@ -1,56 +1,10 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import pickle
-import os
-
-# Verify file existence before loading
-if not os.path.exists("model.pkl"):
-    st.error("Error: model.pkl not found! Please upload the trained model.")
-    st.stop()
-
-if not os.path.exists("feature_names.pkl"):
-    st.error("Error: feature_names.pkl not found! Please ensure this file exists.")
-    st.stop()
-
-if not os.path.exists("scaler.pkl"):
-    st.error("Error: scaler.pkl not found! Please ensure this file exists.")
-    st.stop()
-
-# Load the trained model
-with open("model.pkl", "rb") as file:
-    model = pickle.load(file)
-
-# Load feature names used during training
-with open("feature_names.pkl", "rb") as f:
-    feature_names = pickle.load(f)
-
-# Load scaler used in training
-with open("scaler.pkl", "rb") as f:
-    scaler = pickle.load(f)
-
-# Streamlit App UI
-st.title("🚀 SpaceX Falcon 9 Landing Prediction")
-st.write("Predict whether a Falcon 9 booster will land successfully.")
-
-# User Inputs
-flight_number = st.number_input("Flight Number", min_value=1, step=1)
-payload_mass = st.number_input("Payload Mass (kg)", min_value=0, step=100)
-orbit = st.selectbox("Orbit Type", ["LEO", "GTO", "MEO", "ISS"])
-launch_site = st.selectbox("Launch Site", ["CCAFS", "KSC", "VAFB"])
-
-# Create DataFrame for User Input
-input_data = pd.DataFrame([[flight_number, payload_mass, orbit, launch_site]], 
-                          columns=["Flight Number", "Payload Mass", "Orbit", "Launch Site"])
-
 # Apply One-Hot Encoding to match training data
 input_data = pd.get_dummies(input_data)
 
 # Ensure input has same features as training data
-missing_features = set(feature_names) - set(input_data.columns)
-
-for col in missing_features:
-    input_data[col] = 0  # Add missing columns with default value
+for col in feature_names:
+    if col not in input_data.columns:
+        input_data[col] = 0  # Add missing columns with default value
 
 # Reorder columns to match training data
 input_data = input_data[feature_names]
@@ -58,21 +12,22 @@ input_data = input_data[feature_names]
 # Convert to NumPy Array
 input_array = input_data.to_numpy().reshape(1, -1)
 
-# Apply scaling
-input_scaled = scaler.transform(input_array)
+# 🚀 Fix: Ensure correct number of features before applying scaler
+if input_array.shape[1] != len(feature_names):
+    st.error(f"Feature mismatch! Expected {len(feature_names)} features, but got {input_array.shape[1]}.")
+else:
+    # Apply scaling
+    input_scaled = scaler.transform(input_array)
 
-# Debugging: Show input shape
-st.write(f"Input Shape: {input_scaled.shape}")
+    # Predict Button
+    if st.button("Predict Landing Success"):
+        try:
+            # Make prediction
+            prediction = model.predict(input_scaled)
 
-# Predict Button
-if st.button("Predict Landing Success"):
-    try:
-        # Make prediction
-        prediction = model.predict(input_scaled)
+            # Display result
+            result = "Successful Landing 🏆" if prediction[0] == 1 else "Landing Failure ❌"
+            st.success(f"Predicted Outcome: {result}")
 
-        # Display result
-        result = "Successful Landing 🏆" if prediction[0] == 1 else "Landing Failure ❌"
-        st.success(f"Predicted Outcome: {result}")
-
-    except Exception as e:
-        st.error(f"Error: {e}")
+        except Exception as e:
+            st.error(f"Error: {e}")
