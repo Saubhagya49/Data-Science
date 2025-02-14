@@ -7,12 +7,9 @@ import pickle
 with open("model.pkl", "rb") as file:
     model = pickle.load(file)
 
-# Load feature names (if saved during training)
-try:
-    with open("feature_names.pkl", "rb") as f:
-        feature_names = pickle.load(f)
-except FileNotFoundError:
-    feature_names = None  # Handle case where feature names are not stored
+# Load feature names used during training
+with open("feature_names.pkl", "rb") as f:
+    feature_names = pickle.load(f)
 
 # Streamlit App UI
 st.title("🚀 SpaceX Falcon 9 Landing Prediction")
@@ -28,23 +25,21 @@ launch_site = st.selectbox("Launch Site", ["CCAFS", "KSC", "VAFB"])
 input_data = pd.DataFrame([[flight_number, payload_mass, orbit, launch_site]], 
                           columns=["Flight Number", "Payload Mass", "Orbit", "Launch Site"])
 
-# One-Hot Encoding (Convert Categorical to Numerical)
+# Apply One-Hot Encoding
 input_data = pd.get_dummies(input_data)
 
-# Ensure Input Data has Same Columns as Model Training
-if feature_names:
-    # Add missing columns as 0
-    for col in feature_names:
-        if col not in input_data.columns:
-            input_data[col] = 0
+# Ensure input has same features as training data
+for col in feature_names:
+    if col not in input_data.columns:
+        input_data[col] = 0  # Add missing columns with default value
 
-    # Reorder columns to match model's expected input
-    input_data = input_data[feature_names]
+# Reorder columns to match training data
+input_data = input_data[feature_names]
 
 # Convert to NumPy Array
 input_array = input_data.to_numpy().reshape(1, -1)
 
-# Debugging: Check Input Shape
+# Debugging: Show input shape
 st.write(f"Input Shape: {input_array.shape}")
 
 # Predict Button
