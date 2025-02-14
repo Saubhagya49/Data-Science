@@ -2,10 +2,11 @@ import streamlit as st
 import pandas as pd
 import pickle
 
-# Load trained model
-model = pickle.load(open("model.pkl", "rb"))
+# Load the trained model
+with open("model.pkl", "rb") as file:
+    model = pickle.load(file)
 
-# Streamlit App
+# Streamlit App UI
 st.title("🚀 SpaceX Falcon 9 Landing Prediction")
 st.write("Predict whether a Falcon 9 booster will land successfully.")
 
