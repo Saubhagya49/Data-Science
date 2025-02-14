@@ -11,7 +11,7 @@ with open("model.pkl", "rb") as file:
 with open("feature_names.pkl", "rb") as f:
     feature_names = pickle.load(f)
 
-# Load standard scaler (used during training)
+# Load scaler used in training
 with open("scaler.pkl", "rb") as f:
     scaler = pickle.load(f)
 
@@ -29,10 +29,10 @@ launch_site = st.selectbox("Launch Site", ["CCAFS", "KSC", "VAFB"])
 input_data = pd.DataFrame([[flight_number, payload_mass, orbit, launch_site]], 
                           columns=["Flight Number", "Payload Mass", "Orbit", "Launch Site"])
 
-# Apply One-Hot Encoding
+# Apply One-Hot Encoding to match training data
 input_data = pd.get_dummies(input_data)
 
-# Ensure input has the same features as training data
+# Ensure input has same features as training data
 for col in feature_names:
     if col not in input_data.columns:
         input_data[col] = 0  # Add missing columns with default value
@@ -41,19 +41,19 @@ for col in feature_names:
 input_data = input_data[feature_names]
 
 # Convert to NumPy Array
-input_array = input_data.to_numpy()
+input_array = input_data.to_numpy().reshape(1, -1)
 
-# Apply Standard Scaling (same as training)
-input_array = scaler.transform(input_array)
+# Apply scaling
+input_scaled = scaler.transform(input_array)
 
 # Debugging: Show input shape
-st.write(f"Input Shape: {input_array.shape}")
+st.write(f"Input Shape: {input_scaled.shape}")
 
 # Predict Button
 if st.button("Predict Landing Success"):
     try:
         # Make prediction
-        prediction = model.predict(input_array)
+        prediction = model.predict(input_scaled)
 
         # Display result
         result = "Successful Landing 🏆" if prediction[0] == 1 else "Landing Failure ❌"
