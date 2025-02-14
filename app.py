@@ -22,8 +22,9 @@ st.write("Predict whether a Falcon 9 booster will land successfully.")
 # User Inputs
 flight_number = st.number_input("Flight Number", min_value=1, step=1)
 payload_mass = st.number_input("Payload Mass (kg)", min_value=0, step=100)
-orbit = st.selectbox("Orbit Type", ["LEO", "GTO", "MEO", "ISS"])
-launch_site = st.selectbox("Launch Site", ["CCAFS", "KSC", "VAFB"])
+orbit = st.selectbox("Orbit Type", ['LEO', 'ISS', 'PO', 'GTO', 'ES-L1', 'SSO', 'HEO', 'MEO', 'VLEO',
+       'SO', 'GEO'])
+launch_site = st.selectbox("Launch Site", ['CCAFS SLC 40', 'VAFB SLC 4E', 'KSC LC 39A'])
 
 # Create DataFrame for User Input
 columns = ["Flight Number", "Payload Mass (kg)", "Orbit", "Launch Site"]
