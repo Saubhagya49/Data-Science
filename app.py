@@ -22,6 +22,15 @@ input_data = pd.DataFrame([[flight_number, payload_mass, orbit, launch_site]],
 
 # Predict Button
 if st.button("Predict Landing Success"):
+    import numpy as np
+
+    # Convert input to NumPy array and reshape
+    input_data = np.array(input_data).reshape(1, -1)
+
+    # Make prediction
     prediction = model.predict(input_data)
+
+    # Display result
     result = "Successful Landing 🏆" if prediction[0] == 1 else "Landing Failure ❌"
     st.success(f"Predicted Outcome: {result}")
+
