@@ -1,17 +1,16 @@
 import streamlit as st
 import pickle
 import numpy as np
+import pandas as pd
+import random
 
 # Load trained model
 with open("best_spacex_model.pkl", "rb") as f:
     model = pickle.load(f)
 
-# Load mean feature values (computed from full dataset)
-with open("mean_features.pkl", "rb") as f:
-    mean_values = pickle.load(f)
-
-# Convert mean values to numpy array
-mean_feature_array = mean_values.to_numpy().reshape(1, -1)
+# Load real feature samples from dataset
+with open("real_feature_samples.pkl", "rb") as f:
+    real_samples = pd.read_pickle(f)
 
 # Title
 st.title("🚀 SpaceX Landing Prediction")
@@ -44,13 +43,15 @@ launch_site_encoded = launch_site_mapping[launch_site]
 # Prepare Input Data with 3 user inputs
 input_data = np.array([[payload_mass, orbit_encoded, launch_site_encoded]])
 
-# Fill remaining 80 features with mean values
-full_input_data = mean_feature_array.copy()
-full_input_data[0, :3] = input_data  # Replace the first 3 features with user inputs
+# Randomly select a real row from dataset for missing features
+random_row = real_samples.sample(n=1).to_numpy()
+
+# Replace the first 3 features with user input
+random_row[0, :3] = input_data
 
 # Make Prediction on Button Click
 if st.button("Predict"):
-    prediction = model.predict(full_input_data)
+    prediction = model.predict(random_row)
     
     # Display the result
     if prediction[0] == 1:
