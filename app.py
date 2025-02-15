@@ -6,6 +6,10 @@ import numpy as np
 with open("best_spacex_model.pkl", "rb") as f:
     model = pickle.load(f)
 
+# Load the precomputed mean feature values
+with open("feature_means.pkl", "rb") as f:
+    feature_means = pickle.load(f)
+
 # Title
 st.title("🚀 SpaceX Landing Prediction")
 st.write("Enter details about the rocket launch to predict if it will successfully land.")
@@ -36,12 +40,12 @@ launch_site_mapping = {
 }
 launch_site_encoded = launch_site_mapping[launch_site]
 
-# Prepare Input Data (Fill remaining features with zeros)
-input_data = np.zeros(83)  # Create an array with 83 features
-input_data[:3] = [payload_mass, orbit_encoded, launch_site_encoded]  # Assign user inputs
+# Prepare Input Data
+input_data = feature_means.copy()  # Start with mean values
+input_data.iloc[:3] = [payload_mass, orbit_encoded, launch_site_encoded]  # Replace first 3 features
 
-# Reshape input data for prediction
-input_data = input_data.reshape(1, -1)
+# Convert to numpy array and reshape
+input_data = np.array(input_data).reshape(1, -1)
 
 # Make Prediction on Button Click
 if st.button("Predict"):
