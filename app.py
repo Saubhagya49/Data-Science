@@ -36,8 +36,12 @@ launch_site_mapping = {
 }
 launch_site_encoded = launch_site_mapping[launch_site]
 
-# Prepare Input Data for Prediction
-input_data = np.array([[payload_mass, orbit_encoded, launch_site_encoded]])
+# Prepare Input Data (Fill remaining features with zeros)
+input_data = np.zeros(83)  # Create an array with 83 features
+input_data[:3] = [payload_mass, orbit_encoded, launch_site_encoded]  # Assign user inputs
+
+# Reshape input data for prediction
+input_data = input_data.reshape(1, -1)
 
 # Make Prediction on Button Click
 if st.button("Predict"):
