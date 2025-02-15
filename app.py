@@ -2,28 +2,29 @@ import streamlit as st
 import pickle
 import numpy as np
 
-# Load the trained model
+# Load trained model
 with open("best_spacex_model.pkl", "rb") as f:
     model = pickle.load(f)
 
-# Load the precomputed mean feature values
-with open("feature_means.pkl", "rb") as f:
-    feature_means = pickle.load(f)
+# Load mean feature values (computed from full dataset)
+with open("mean_features.pkl", "rb") as f:
+    mean_values = pickle.load(f)
+
+# Convert mean values to numpy array
+mean_feature_array = mean_values.to_numpy().reshape(1, -1)
 
 # Title
 st.title("🚀 SpaceX Landing Prediction")
-st.write("Enter details about the rocket launch to predict if it will successfully land.")
+st.write("Enter rocket launch details to predict landing success.")
 
 # Input Fields
 payload_mass = st.number_input("Payload Mass (kg)", min_value=0, step=100)
 
 # Orbit Selection
-orbit = st.selectbox("Orbit Type", 
-                      ['LEO', 'ISS', 'PO', 'GTO', 'ES-L1', 'SSO', 'HEO', 'MEO', 'VLEO', 'SO', 'GEO'])
+orbit = st.selectbox("Orbit Type", ['LEO', 'ISS', 'PO', 'GTO', 'ES-L1', 'SSO', 'HEO', 'MEO', 'VLEO', 'SO', 'GEO'])
 
 # Launch Site Selection
-launch_site = st.selectbox("Launch Site", 
-                           ['CCAFS SLC 40', 'VAFB SLC 4E', 'KSC LC 39A'])
+launch_site = st.selectbox("Launch Site", ['CCAFS SLC 40', 'VAFB SLC 4E', 'KSC LC 39A'])
 
 # Encode Orbit Type
 orbit_mapping = {
@@ -40,16 +41,16 @@ launch_site_mapping = {
 }
 launch_site_encoded = launch_site_mapping[launch_site]
 
-# Prepare Input Data
-input_data = feature_means.copy()  # Start with mean values
-input_data.iloc[:3] = [payload_mass, orbit_encoded, launch_site_encoded]  # Replace first 3 features
+# Prepare Input Data with 3 user inputs
+input_data = np.array([[payload_mass, orbit_encoded, launch_site_encoded]])
 
-# Convert to numpy array and reshape
-input_data = np.array(input_data).reshape(1, -1)
+# Fill remaining 80 features with mean values
+full_input_data = mean_feature_array.copy()
+full_input_data[0, :3] = input_data  # Replace the first 3 features with user inputs
 
 # Make Prediction on Button Click
 if st.button("Predict"):
-    prediction = model.predict(input_data)
+    prediction = model.predict(full_input_data)
     
     # Display the result
     if prediction[0] == 1:
