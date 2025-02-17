@@ -1,46 +1,44 @@
-import streamlit as st
 import pickle
 import numpy as np
-import pandas as pd
+import streamlit as st
+from sklearn.preprocessing import StandardScaler
 
 # Load the trained model
-with open("spacex_fixed_model.pkl", "rb") as f:
+with open("best_spacex_model.pkl", "rb") as f:
     model = pickle.load(f)
 
-# Title
-st.title("🚀 SpaceX Landing Prediction")
-st.write("Enter details about the rocket launch to predict if it will successfully land.")
+# Load the saved scaler
+with open("scaler.pkl", "rb") as f:
+    scaler = pickle.load(f)
 
-# Input Fields
+# Take user inputs
 payload_mass = st.number_input("Payload Mass (kg)", min_value=0, step=100)
+orbit = st.selectbox("Orbit Type", ['LEO', 'ISS', 'PO', 'GTO', 'ES-L1', 'SSO', 'HEO', 'MEO', 'VLEO', 'SO', 'GEO'])
+launch_site = st.selectbox("Launch Site", ['CCAFS SLC 40', 'VAFB SLC 4E', 'KSC LC 39A'])
 
-# Orbit Selection
-orbit_options = ['Orbit_LEO', 'Orbit_ISS', 'Orbit_PO', 'Orbit_GTO', 'Orbit_ES-L1', 
-                 'Orbit_SSO', 'Orbit_HEO', 'Orbit_MEO', 'Orbit_VLEO', 'Orbit_SO', 'Orbit_GEO']
-orbit = st.selectbox("Orbit Type", orbit_options)
+# Encode Orbit (One-Hot Encoding)
+orbits = ['LEO', 'ISS', 'PO', 'GTO', 'ES-L1', 'SSO', 'HEO', 'MEO', 'VLEO', 'SO', 'GEO']
+orbit_features = [1 if o == orbit else 0 for o in orbits]
 
-# Launch Site Selection
-launch_site_options = ['LaunchSite_CCAFS SLC 40', 'LaunchSite_VAFB SLC 4E', 'LaunchSite_KSC LC 39A']
-launch_site = st.selectbox("Launch Site", launch_site_options)
+# Encode Launch Site (One-Hot Encoding)
+launch_sites = ['CCAFS SLC 40', 'VAFB SLC 4E', 'KSC LC 39A']
+launch_site_features = [1 if site == launch_site else 0 for site in launch_sites]
 
-# Prepare Input Data
-input_data = np.zeros((1, len(orbit_options) + len(launch_site_options) + 1))  # +1 for PayloadMass
-input_data[0, 0] = payload_mass  # Set PayloadMass
+# Add missing features (set default values for other columns)
+other_features = [0] * (83 - (len(orbit_features) + len(launch_site_features) + 1))
 
-# Set Orbit one-hot encoding
-orbit_index = orbit_options.index(orbit) + 1  # +1 because PayloadMass is at index 0
-input_data[0, orbit_index] = 1
+# Combine all features into a single array
+input_data = np.array([[payload_mass] + orbit_features + launch_site_features + other_features])
 
-# Set Launch Site one-hot encoding
-launch_site_index = launch_site_options.index(launch_site) + len(orbit_options) + 1  # +1 for PayloadMass
-input_data[0, launch_site_index] = 1
+# Scale input data using the saved scaler
+input_data_scaled = scaler.transform(input_data)
 
 # Make Prediction on Button Click
 if st.button("Predict"):
-    prediction = model.predict(input_data)
-    
-    # Display the result
+    prediction = model.predict(input_data_scaled)
+    prediction_prob = model.predict_proba(input_data_scaled)
+
     if prediction[0] == 1:
-        st.success("🟢 The rocket is likely to **land successfully!**")
+        st.success(f"🟢 The rocket is likely to **land successfully!** (Confidence: {prediction_prob[0][1]:.2%})")
     else:
-        st.error("🔴 The rocket is likely to **fail the landing.**")
+        st.error(f"🔴 The rocket is likely to **fail the landing.** (Confidence: {prediction_prob[0][0]:.2%})")
