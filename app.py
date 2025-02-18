@@ -11,29 +11,57 @@ with open("best_spacex_model.pkl", "rb") as f:
 with open("scaler.pkl", "rb") as f:
     scaler = pickle.load(f)
 
-# Take user inputs
+# --- User Inputs ---
+
+# Numeric Input for Payload Mass
 payload_mass = st.number_input("Payload Mass (kg)", min_value=0, step=100)
+
+# Orbit Type (One-Hot Encoded later)
 orbit = st.selectbox("Orbit Type", ['LEO', 'ISS', 'PO', 'GTO', 'ES-L1', 'SSO', 'HEO', 'MEO', 'VLEO', 'SO', 'GEO'])
+
+# Launch Site (One-Hot Encoded later)
 launch_site = st.selectbox("Launch Site", ['CCAFS SLC 40', 'VAFB SLC 4E', 'KSC LC 39A'])
 
-# Encode Orbit (One-Hot Encoding)
+# Additional Inputs:
+flights = st.selectbox("Number of Previous Flights", [1, 2, 3, 4, 5, 6])
+block = st.slider("Block Version", min_value=1.0, max_value=5.0, step=1.0)
+
+grid_fins = st.checkbox("Grid Fins", value=False)
+reused = st.checkbox("Reused Booster", value=False)
+legs = st.checkbox("Landing Legs", value=False)
+
+# Conditional input for Reused Count
+if reused:
+    reused_count = st.selectbox("Reused Count", [1, 2, 3, 4, 5])
+else:
+    reused_count = 0
+
+# --- One-Hot Encoding for Categorical Inputs ---
+
+# Encode Orbit
 orbits = ['LEO', 'ISS', 'PO', 'GTO', 'ES-L1', 'SSO', 'HEO', 'MEO', 'VLEO', 'SO', 'GEO']
 orbit_features = [1 if o == orbit else 0 for o in orbits]
 
-# Encode Launch Site (One-Hot Encoding)
+# Encode Launch Site
 launch_sites = ['CCAFS SLC 40', 'VAFB SLC 4E', 'KSC LC 39A']
 launch_site_features = [1 if site == launch_site else 0 for site in launch_sites]
 
-# Add missing features (set default values for other columns)
-other_features = [0] * (83 - (len(orbit_features) + len(launch_site_features) + 1))
+# --- Combine All Features ---
+# Convert boolean inputs to integers
+grid_fins_int = int(grid_fins)
+reused_int = int(reused)
+legs_int = int(legs)
 
-# Combine all features into a single array
+# Combine additional features into a list
+other_features = [flights, block, grid_fins_int, reused_int, reused_count, legs_int]
+
+# Final input array: [payload_mass] + orbit_features + launch_site_features + other_features
 input_data = np.array([[payload_mass] + orbit_features + launch_site_features + other_features])
 
-# Scale input data using the saved scaler
+# --- Scaling ---
 input_data_scaled = scaler.transform(input_data)
 
-# Make Prediction on Button Click
+# --- Prediction ---
 if st.button("Predict"):
     prediction = model.predict(input_data_scaled)
     prediction_prob = model.predict_proba(input_data_scaled)
