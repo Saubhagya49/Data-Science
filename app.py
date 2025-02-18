@@ -32,30 +32,30 @@ else:
     reused_count = 0
 
 # --- Automatically Handle Remaining Data ---
-
-# Set default values for fields that are not user input
-# For example, the 'Booster Version' is fixed (Falcon 9)
-booster_version = "Falcon 9"  # Fixed for the app, as per your model
-serial = ""  # Assuming serial is not needed anymore, otherwise handle it here
+# These might be features the model expects but doesn't take from user input
+booster_version = "Falcon 9"  # Fixed for the app
+serial = ""  # Assuming serial is not needed anymore
 
 # --- One-Hot Encoding for Categorical Inputs ---
-
-# Encode Orbit
 orbits = ['LEO', 'ISS', 'PO', 'GTO', 'ES-L1', 'SSO', 'HEO', 'MEO', 'VLEO', 'SO', 'GEO']
 orbit_features = [1 if o == orbit else 0 for o in orbits]
 
-# Encode Launch Site
 launch_sites = ['CCAFS SLC 40', 'VAFB SLC 4E', 'KSC LC 39A']
 launch_site_features = [1 if site == launch_site else 0 for site in launch_sites]
 
-# Combine the user input and the automatically handled fields into one final list
+# Convert boolean inputs to integers
 grid_fins_int = int(grid_fins)
 reused_int = int(reused)
 legs_int = int(legs)
 
-other_features = [flights, block, grid_fins_int, reused_int, reused_count, legs_int]
+# Additional static features that the model was trained with
+# These are default values that could be required for the model:
+# (These should be adjusted based on the actual features the model was trained with)
+# Add any additional features here to make the total count of features 83
+additional_features = [booster_version, serial]  # Update this to include other features like "Block", "Serial" etc.
 
-# Make sure to include ALL features that the model was trained with, including any one-hot encodings.
+# Combine the user input and the automatically handled fields into one final list
+other_features = [flights, block, grid_fins_int, reused_int, reused_count, legs_int] + additional_features
 
 # Final input array: [payload_mass] + orbit_features + launch_site_features + other_features
 input_data = np.array([[payload_mass] + orbit_features + launch_site_features + other_features])
