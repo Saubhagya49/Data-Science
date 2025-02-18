@@ -32,9 +32,9 @@ else:
     reused_count = 0
 
 # --- Automatically Handle Remaining Data ---
-# Set the 'booster_version' as a constant, we can use '0' or any fixed numeric value, as it's constant
-booster_version = 0  # Fixed for the app, as it's always "Falcon 9"
-serial = ""  # Assuming serial is not needed anymore
+# 'booster_version' can be treated as a fixed numeric value if it's constant.
+booster_version = 0  # Fixed value for "Falcon 9"
+serial = ""  # If serial is used in the model, handle it as needed
 
 # --- One-Hot Encoding for Categorical Inputs ---
 orbits = ['LEO', 'ISS', 'PO', 'GTO', 'ES-L1', 'SSO', 'HEO', 'MEO', 'VLEO', 'SO', 'GEO']
@@ -48,11 +48,15 @@ grid_fins_int = int(grid_fins)
 reused_int = int(reused)
 legs_int = int(legs)
 
-# Combine the user input and the automatically handled fields into one final list
-other_features = [flights, block, grid_fins_int, reused_int, reused_count, legs_int, booster_version]  # No need to pass 'serial' unless it's part of the model's features
+# --- Fill Missing Features with Zeros (Ensure 83 Features in Total) ---
+# Fill the missing features (those that aren't needed) with zeros.
+missing_features = [0] * (83 - len(orbit_features) - len(launch_site_features) - 7)  # Fill to make up the missing features
 
-# Final input array: [payload_mass] + orbit_features + launch_site_features + other_features
-input_data = np.array([[payload_mass] + orbit_features + launch_site_features + other_features])
+# Combine user inputs, manually added features, and zero-padded missing features
+other_features = [flights, block, grid_fins_int, reused_int, reused_count, legs_int, booster_version]  # Add other features as needed
+
+# Final input array with padding (make sure it has exactly 83 features)
+input_data = np.array([[payload_mass] + orbit_features + launch_site_features + other_features + missing_features])
 
 # --- Scaling ---
 input_data_scaled = scaler.transform(input_data)
@@ -60,7 +64,7 @@ input_data_scaled = scaler.transform(input_data)
 # --- Prediction ---
 if st.button("Predict"):
     try:
-        # Ensure the input matches the expected shape of the model
+        # Make the prediction using the model
         prediction = model.predict(input_data_scaled)
         prediction_prob = model.predict_proba(input_data_scaled)
 
