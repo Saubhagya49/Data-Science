@@ -12,31 +12,31 @@ with open("scaler.pkl", "rb") as f:
     scaler = pickle.load(f)
 
 # --- User Inputs ---
-
-# Numeric Input for Payload Mass
 payload_mass = st.number_input("Payload Mass (kg)", min_value=0, step=100)
 
-# Orbit Type (One-Hot Encoded later)
 orbit = st.selectbox("Orbit Type", ['LEO', 'ISS', 'PO', 'GTO', 'ES-L1', 'SSO', 'HEO', 'MEO', 'VLEO', 'SO', 'GEO'])
 
-# Launch Site (One-Hot Encoded later)
 launch_site = st.selectbox("Launch Site", ['CCAFS SLC 40', 'VAFB SLC 4E', 'KSC LC 39A'])
 
-# Additional Inputs:
 flights = st.selectbox("Number of Previous Flights", [1, 2, 3, 4, 5, 6])
+
 block = st.slider("Block Version", min_value=1.0, max_value=5.0, step=1.0)
 
 grid_fins = st.checkbox("Grid Fins", value=False)
 reused = st.checkbox("Reused Booster", value=False)
 legs = st.checkbox("Landing Legs", value=False)
 
-# Conditional input for Reused Count
 if reused:
     reused_count = st.selectbox("Reused Count", [1, 2, 3, 4, 5])
 else:
     reused_count = 0
 
-# --- One-Hot Encoding for Categorical Inputs ---
+# --- Automatically Handle Remaining Data ---
+
+# Set default values for fields that are not user input
+# For example, the 'Booster Version' is fixed (Falcon 9)
+booster_version = "Falcon 9"  # Fixed for the app, as per your model
+serial = ""  # Assuming serial is not needed anymore, otherwise handle it here
 
 # Encode Orbit
 orbits = ['LEO', 'ISS', 'PO', 'GTO', 'ES-L1', 'SSO', 'HEO', 'MEO', 'VLEO', 'SO', 'GEO']
@@ -46,13 +46,12 @@ orbit_features = [1 if o == orbit else 0 for o in orbits]
 launch_sites = ['CCAFS SLC 40', 'VAFB SLC 4E', 'KSC LC 39A']
 launch_site_features = [1 if site == launch_site else 0 for site in launch_sites]
 
-# --- Combine All Features ---
 # Convert boolean inputs to integers
 grid_fins_int = int(grid_fins)
 reused_int = int(reused)
 legs_int = int(legs)
 
-# Combine additional features into a list
+# Combine the user input and the automatically handled fields into one final list
 other_features = [flights, block, grid_fins_int, reused_int, reused_count, legs_int]
 
 # Final input array: [payload_mass] + orbit_features + launch_site_features + other_features
