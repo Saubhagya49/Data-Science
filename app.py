@@ -32,7 +32,6 @@ else:
     reused_count = 0
 
 # --- Automatically Handle Remaining Data ---
-# 'booster_version' can be treated as a fixed numeric value if it's constant.
 booster_version = 0  # Fixed value for "Falcon 9"
 serial = ""  # If serial is used in the model, handle it as needed
 
@@ -50,10 +49,22 @@ legs_int = int(legs)
 
 # --- Fill Missing Features with Zeros (Ensure 83 Features in Total) ---
 # Fill the missing features (those that aren't needed) with zeros.
-missing_features = [0] * (83 - len(orbit_features) - len(launch_site_features) - 7)  # Fill to make up the missing features
+# The number of total features required is 83, and we're adding payload_mass, orbit_features, launch_site_features, and other features.
+
+# We already have:
+# - 1 feature for payload_mass
+# - 11 features for orbit (one-hot encoded)
+# - 3 features for launch_site (one-hot encoded)
+# - 7 additional features (flights, block, grid_fins, reused, reused_count, legs, booster_version)
+
+# So we have a total of:
+# 1 (payload_mass) + 11 (orbit_features) + 3 (launch_site_features) + 7 (other_features) = 22 features
+
+# To make it 83, we need to add 83 - 22 = 61 zeros.
+missing_features = [0] * 61  # Fill to make up the missing features
 
 # Combine user inputs, manually added features, and zero-padded missing features
-other_features = [flights, block, grid_fins_int, reused_int, reused_count, legs_int, booster_version]  # Add other features as needed
+other_features = [flights, block, grid_fins_int, reused_int, reused_count, legs_int, booster_version]
 
 # Final input array with padding (make sure it has exactly 83 features)
 input_data = np.array([[payload_mass] + orbit_features + launch_site_features + other_features + missing_features])
