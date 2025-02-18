@@ -32,8 +32,8 @@ else:
     reused_count = 0
 
 # --- Automatically Handle Remaining Data ---
-# These might be features the model expects but doesn't take from user input
-booster_version = "Falcon 9"  # Fixed for the app
+# Set the 'booster_version' as a constant, we can use '0' or any fixed numeric value, as it's constant
+booster_version = 0  # Fixed for the app, as it's always "Falcon 9"
 serial = ""  # Assuming serial is not needed anymore
 
 # --- One-Hot Encoding for Categorical Inputs ---
@@ -48,14 +48,8 @@ grid_fins_int = int(grid_fins)
 reused_int = int(reused)
 legs_int = int(legs)
 
-# Additional static features that the model was trained with
-# These are default values that could be required for the model:
-# (These should be adjusted based on the actual features the model was trained with)
-# Add any additional features here to make the total count of features 83
-additional_features = [booster_version, serial]  # Update this to include other features like "Block", "Serial" etc.
-
 # Combine the user input and the automatically handled fields into one final list
-other_features = [flights, block, grid_fins_int, reused_int, reused_count, legs_int] + additional_features
+other_features = [flights, block, grid_fins_int, reused_int, reused_count, legs_int, booster_version]  # No need to pass 'serial' unless it's part of the model's features
 
 # Final input array: [payload_mass] + orbit_features + launch_site_features + other_features
 input_data = np.array([[payload_mass] + orbit_features + launch_site_features + other_features])
